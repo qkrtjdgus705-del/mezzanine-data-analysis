@@ -387,7 +387,10 @@ def flatten_table_columns(df):
             for index, column in enumerate(flattened.columns)
         ]
 
-    flattened = flattened.applymap(clean_display_text)
+    if hasattr(flattened, "map"):
+        flattened = flattened.map(clean_display_text)
+    else:
+        flattened = flattened.applymap(clean_display_text)
     flattened = flattened.replace("", np.nan).dropna(how="all").dropna(axis=1, how="all").fillna("")
     return flattened
 
@@ -1137,9 +1140,26 @@ def trading_day_after(df, start_value, trading_days):
 
 @st.cache_data(ttl=60 * 60 * 24)
 def download_corp_codes(api_key):
+    if not clean_display_text(api_key):
+        raise ValueError(
+            "OPEN_DART_API_KEY가 설정되지 않았습니다. "
+            "Streamlit Cloud의 Settings > Secrets에 키를 등록하세요."
+        )
+
     url = "https://opendart.fss.or.kr/api/corpCode.xml"
     response = requests.get(url, params={"crtfc_key": api_key}, timeout=20)
     response.raise_for_status()
+
+    if not response.content.startswith(b"PK"):
+        try:
+            root = ET.fromstring(response.content)
+            status = root.findtext("status") or ""
+            message = root.findtext("message") or "OpenDART가 ZIP 파일이 아닌 응답을 반환했습니다."
+            detail = f"{status}: {message}" if status else message
+        except ET.ParseError:
+            detail = response.text[:300] or "응답 내용을 확인할 수 없습니다."
+
+        raise ValueError(f"OpenDART 기업코드 조회 실패: {detail}")
 
     with ZipFile(BytesIO(response.content)) as zip_file:
         xml_name = zip_file.namelist()[0]
@@ -1797,7 +1817,7 @@ st.sidebar.header("검색 설정")
 try:
     with st.spinner("기업 목록 다운로드 중입니다."):
         corp_df = download_corp_codes(API_KEY)
-except requests.RequestException as error:
+except (requests.RequestException, ValueError) as error:
     st.error(f"기업 목록 다운로드 실패: {error}")
     st.stop()
 
