@@ -503,7 +503,7 @@ def get_disclosure_list(api_key, corp_code, start_date, end_date, page_count=100
                 "page_no": page_no,
                 "page_count": page_count,
             },
-            timeout=20,
+            timeout=60,
         )
         response.raise_for_status()
         data = response.json()
@@ -610,7 +610,7 @@ def build_funding_purpose_df(mezz_df):
 @st.cache_data(ttl=60 * 60)
 def get_disclosure_document_tables(api_key, rcept_no):
     url = "https://opendart.fss.or.kr/api/document.xml"
-    response = requests.get(url, params={"crtfc_key": api_key, "rcept_no": rcept_no}, timeout=20)
+    response = requests.get(url, params={"crtfc_key": api_key, "rcept_no": rcept_no}, timeout=60)
     response.raise_for_status()
 
     if not response.content.startswith(b"PK"):
@@ -678,7 +678,7 @@ def _seibro_post(session, req_param_xml: str, action: str = "", task: str = "", 
     if extra:
         data.update(extra)
 
-    resp = session.post(url, headers=headers, data=data, timeout=20)
+    resp = session.post(url, headers=headers, data=data, timeout=60)
     resp.raise_for_status()
     return resp.text
 
@@ -772,7 +772,7 @@ def fetch_seibro_issuance_list(isin: str = None, corp_name: str = None, issue_st
         "User-Agent": "python-requests/SeibroClient",
     }
 
-    resp = session.post(post_url, data=req_root, headers=headers, timeout=20)
+    resp = session.post(post_url, data=req_root, headers=headers, timeout=60)
     resp.raise_for_status()
     text = resp.text
 
@@ -1070,7 +1070,7 @@ def fetch_seibro_mobile_bond_tables(isin, bond_name=""):
     response = requests.get(
         "https://m.seibro.or.kr/cnts/bond/selectDetailSearch.do",
         params={"InOrdSel": "all", "txt_code": isin, "txt_sch": bond_name or isin},
-        timeout=20,
+        timeout=60,
     )
     response.raise_for_status()
 
@@ -1147,7 +1147,7 @@ def download_corp_codes(api_key):
         )
 
     url = "https://opendart.fss.or.kr/api/corpCode.xml"
-    response = requests.get(url, params={"crtfc_key": api_key}, timeout=20)
+    response = requests.get(url, params={"crtfc_key": api_key}, timeout=60)
     response.raise_for_status()
 
     if not response.content.startswith(b"PK"):
@@ -1193,7 +1193,7 @@ def get_mezzanine_disclosure_data(api_key, corp_code, start_date, end_date, disc
         "end_de": end_date.strftime("%Y%m%d"),
     }
 
-    response = requests.get(url, params=params, timeout=20)
+    response = requests.get(url, params=params, timeout=60)
     response.raise_for_status()
     data = response.json()
 
