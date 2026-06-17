@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import xml.etree.ElementTree as ET
 from zipfile import ZipFile
+import time
 
 import numpy as np
 import pandas as pd
@@ -1147,7 +1148,7 @@ def download_corp_codes(api_key):
         )
 
     url = "https://opendart.fss.or.kr/api/corpCode.xml"
-    response = requests.get(url, params={"crtfc_key": api_key}, timeout=60)
+    response = requests.get(url, params={"crtfc_key": api_key}, timeout=(10, 120))
     response.raise_for_status()
 
     if not response.content.startswith(b"PK"):
